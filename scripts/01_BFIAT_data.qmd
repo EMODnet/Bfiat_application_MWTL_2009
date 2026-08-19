@@ -1,0 +1,442 @@
+---
+title: "Assessment of fisheries impact in the Dutch part of the Northsea, for 2009. The BFIAT approach"
+subtitle: "part 1 - preparing data sets"
+author: "karline soetaert"
+toc: true
+toc-depth: 3
+toc-expand: true
+code-fold: show
+format: 
+  html:
+    self-contained: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: sentence
+abstract: "Benthic fishing impact assessment using the BFIAT approach, requires (1) benthic taxon biomass or density data, (2) the taxon's average age at maturity, and sediment living depth, as well as (3) fishing intensity in terms of the swept area ratio and mean gear penetration depth. Here it is shown how to create such a dataset by combining species biomass data with trait databases and taxonomic trees. The data used are the Dutch Northsea macrofauna monitoring data from the year 2009 (the MWTL data), combined with a databases with macrofaunal traits, and fisheries data from ICES. The final data set is a large data.frame, that contains, for each sampling station, the species biomass and density, their age at maturity, and the occurrence in several sediment depth classes. For each station, also the swept area ratio and mean gear penetration depth is in the data.frame. This data forms the input for the BFIAT methodology." 
+---
+
+```{r}
+# Load necessary libraries
+require("Btrait")
+```
+
+# The MWTL biomass data
+
+The MWTL data are macrofauna monitoring data of the Dutch part of the Northsea, as described in Lewis et al., (2015).
+
+These data, obtained from the EMODnet data portal, up to 2018, were made available from the R-package *Btrait* (Soetaert and Beauchard, 2023), in a list called *MWTL*.
+
+This dataset contains several data.frames, with, amongst others, species density and biomass, abiotic conditions, and fisheries information, for 103 stations, encompassing 19 sampling events from 1995 till 2018 (almost on a yearly basis).
+
+The MWTL data for the year 2009 are used in this analysis. This data comprises only 100 stations.
+
+## Extracting biomass and density data
+
+Fisheries assessment will be performed on the biomass values, but densities are also needed to estimate the effect on ecosystem functioning.
+
+The biomass and density values, which are in $g~AFDWT~m^{-2}$ (ash-free dry weight) and $ind~m^{-2}$ respectively, are extracted from the dataset (in data.frame *MWTL$density*). Btrait function *get_density* calculates the sum of multiple occurrences of species biomass and density values in a station.
+
+\footnote{For the MWTL data, multiple occurrences of species may be present, as biomass for a single species in a station has been estimated in multiple batches.}
+
+```{r}
+MWTL_biomass <- get_density(
+   data        = subset(MWTL$density,             
+                        subset = year == 2009),   # density data for 2009
+   descriptor  = station,                         # station names
+   taxon       = taxon,                           # taxon names
+   value       = cbind(biomass,                   # biomass and density values
+                       density) 
+)
+head(MWTL_biomass)
+```
+
+## Taxon list 
+
+The names of all the taxa that are in the data set are extracted.
+They are needed to obtain the taxon's trait information (see below).
+
+```{r}
+MWTL_taxa <- sort(unique(MWTL_biomass$taxon))  
+
+head(MWTL_taxa, n = 3) # show first part of the data
+```
+
+There are `r length(MWTL_taxa)` different taxa in this data set.
+
+# Taxonomic tree
+
+We will use taxonomic relationships to obtain trait information for taxa whose traits are unrecorded in the trait database.  
+
+In order to do this, we need a taxonomic tree of all taxa that are in the biomass data (*MWTL_taxa*, see above), and in the trait database (*Traits_nioz*, see below).
+
+Such a taxonomic tree can be obtained from the WoRMS website, e.g. via R-package *worrms* (Chamberlain and Vanhoorne, 2023).
+
+The taxonomic relationships needed here have already been prepared and are in a dataset called *Taxonomy*, which is part of the *Btrait* package.
+
+It is necessary that the columns are ordered in increasing taxonomic level (taxon, genus, ...).
+
+```{r}
+head(Taxonomy, n = 3)
+```
+
+# The age at maturity
+
+The recovery rate of individual taxa after fishing, can be estimated from the inverse of the age at maturity (Beauchard and Soetaert, 2026). 
+
+The age at maturity trait is part of the nioz trait database, *Traits_nioz*, which is included in the *Btrait* package.
+
+This dataset records many traits, and the data are stored in wide format: there is one row for each taxon, and the trait modalities make up the columns.
+
+```{r}
+head(Traits_nioz, n = c(3, 3))
+```
+
+The column names in this data are not very informative (ET1.M1, ET1.M2, ...), but their meaning is stored in the dataframe's metadata, which can be extracted with function *metadata* from the *Btrait* package.
+
+```{r}
+head(metadata(Traits_nioz), n = 3)
+```
+
+## Extracting age at maturity for all taxa
+
+The names of the columns that deal with age at maturity are first found from the trait's *metadata*.
+
+```{r}
+# description of trait modalities
+meta    <- metadata(Traits_nioz)  
+
+# trait modalities for age at maturity
+Am_meta <- subset(meta,           
+                  subset = (trait == "Age at maturity"))
+
+# show the metadata
+Am_meta                           
+```
+
+Then the age at maturity traits are selected from the nioz trait database, and more suitable column names are assigned:
+
+```{r}
+Am_traits <- Traits_nioz[, c("taxon", 
+                             Am_meta$colname)]
+
+# suitable column names for age at maturity
+colnames(Am_traits)[-1] <- paste("Am", Am_meta$modality, sep = "_")     
+
+head(Am_traits, n = 3)
+```
+
+In this data, the age at maturity is stored in 3 modality classes, 0-1, 1-3 and 3-5 years.
+
+For some speciews, these traits are manually changed (as new insights have led to other values - O. Beauchard, pers.comm.)
+
+```{r}
+#Corrections for North Sea dominant taxa
+Am_traits[,2:4][Am_traits$taxon == "Abra alba",]            <- c(1, 1, 0)/2
+Am_traits[,2:4][Am_traits$taxon == "Abra nitida",]          <- c(1, 1, 0)/2
+Am_traits[,2:4][Am_traits$taxon == "Magelona",]             <- c(1, 1, 0)/2
+Am_traits[,2:4][Am_traits$taxon == "Lagis koreni",]         <- c(1, 1, 0)/2
+Am_traits[,2:4][Am_traits$taxon == "Lanice conchilega",]    <- c(1, 1, 0)/2
+Am_traits[,2:4][Am_traits$taxon == "Laonice cirrata",]      <- c(1, 1, 0)/2
+Am_traits[,2:4][Am_traits$taxon == "Tellimya ferruginosa",] <- c(1, 1, 0)/2
+```
+
+## Calculating mean age at maturity traits
+
+For all taxa in the MWTL data set (*MWTL_taxa*), the average age at maturity is now estimated.
+
+Unfortunately, for many taxa in the MWTL data set, trait information is not present in the databases.
+
+This leaves two options: either these absent taxa are discarded from the analysis, or plausible traits are estimated based on their taxonomic relationship with taxa that *are* in the trait database.
+
+Here, we follow the second option. Function *get_trait* from the *Btrait* R-package extracts these traits; by passing the taxonomic tree that comprises the taxonomic relationships for all species in the trait and biomass data sets (*Taxonomy*), the traits for unrecorded species are also estimated.
+
+For the analysis we need the *average* age at maturity.
+
+By specifying the arguments *trait_class* and *trait_score*, the *get_trait* function is instructed to estimate the average of the age at maturity.
+
+```{r}
+MWTL_taxon_Am <- get_trait(
+      taxon       = MWTL_taxa,     # vector with taxa to estimate traits 
+      trait       = Am_traits,     # trait database
+      trait_class = Am_meta$trait, # trait name
+      trait_score = Am_meta$value, # trait value - to calculate the mean
+      taxonomy    = Taxonomy)      # taxonomic tree 
+
+head(MWTL_taxon_Am, n = 2)
+```
+
+Even though we passed the full taxonomic tree, there remain a few taxa whose traits could not be found.
+These taxa are stored in the object's attributes.
+Upon inspection the unrecorded taxa are not true macrofauna, so they are removed from the data.
+
+```{r}
+# taxa without traits assigned
+Notrait  <- attributes(MWTL_taxon_Am)$notrait  
+Notrait         
+
+# remove these taxa from the MWTL data (taxon list and biomass data)
+MWTL_taxa    <- MWTL_taxa    [! MWTL_taxa          %in% Notrait  ]  
+MWTL_biomass <- MWTL_biomass [! MWTL_biomass$taxon %in% Notrait, ]  
+```
+
+# Sediment depth distribution
+
+Upon fishing, the overlap of the species' living space with the fishing gear determines its mortality (Beauchard and Soetaert, 2026).
+
+Thus, to estimate the depletion rate of individual taxa upon fishing, the depth occurrence in the sediment is required.
+
+The depth distribution of taxa is part of the nioz trait database, *Traits_nioz*, which is included in the *Btrait* package.
+
+## Extracting depth distribution 
+
+We start by locating these data, from the metadata table:
+
+```{r}
+# description of all trait modalities in nioz database
+meta     <- metadata(Traits_nioz)  
+
+# trait modalities for age at maturity
+Sd_meta  <- subset(meta,           
+                   subset = (trait == "Substratum depth distribution"))
+
+# show the metadata
+Sd_meta                       
+```
+
+These data are extracted from the trait database:
+
+```{r}
+Sd_traits <- Traits_nioz[, c("taxon", 
+                             Sd_meta$colname)]
+
+# give suitable column names
+colnames(Sd_traits)[-1] <-  paste("Sd", Sd_meta$modality, sep = "_")     
+
+head(Sd_traits)
+```
+
+The sediment depth distribution is stored in 5 modality classes, 0 (at/on the surface), 0-5 cm, 5-15 cm, 15-30 cm, and \> 30 cm.
+
+Some values are manually altered, based on new insights (O. Beauchard, pers.comm.)
+
+```{r}
+#Corrections for North Sea dominant taxa
+Sd_traits[,2:6][Sd_traits$taxon == "Acrocnida brachiata",] <- c(1, 1, 1, 0, 0)/3
+Sd_traits[,2:6][Sd_traits$taxon == "Arctica islandica",]   <- c(0, 1, 0, 0, 0)/1
+Sd_traits[,2:6][Sd_traits$taxon == "Amphiura chiajei",]    <- c(0, 1, 1, 0, 0)/2
+Sd_traits[,2:6][Sd_traits$taxon == "Amphiura filiformis",] <- c(0, 1, 1, 0, 0)/2
+Sd_traits[,2:6][Sd_traits$taxon == "Echinocardium",]       <- c(0, 1, 1, 0, 0)/2
+Sd_traits[,2:6][Sd_traits$taxon == "Ensis",]               <- c(0, 1, 0, 0, 0)/1
+```
+
+For all taxa in the MWTL data set (*MWTL_taxa*), the substratum depth distribution is now estimated.
+
+For the analysis, we need these traits to be in fuzzy format (i.e. no averaging is required).
+The taxonomic tree (*Taxonomy*) is passed to estimate the traits also for taxa not recorded in the trait database.
+
+```{r}
+MWTL_taxon_Sd <- get_trait(
+      taxon       = MWTL_taxa,    # taxa to estimate traits 
+      trait       = Sd_traits,    # trait database
+      taxonomy    = Taxonomy)     # taxonomic relation
+
+head(MWTL_taxon_Sd, n = 2)
+```
+
+# Fishing data
+
+To run the model, we also need fishing data, comprising:
+
+-   total sar (swept area ratio), measures the intensity of trawling
+-   mean gpd (gear penetration depth), measures the thickness of the sediment that is affected by trawling
+
+Fishing data are present in data.frame *MWTL\$sar* from the *Btrait* package.
+These data were derived from ICES (2018).
+
+```{r}
+metadata(MWTL$sar)
+```
+
+The fisheries data contain swept area ratios (sar) for several metiers.
+The gear penetration depth (gpd) was estimated based on metier and sediment type.
+
+The data from 2009 are extracted.
+
+```{r}
+sar_2009 <- subset(MWTL$sar, 
+                   subset = year == 2009,
+                   select = c(station, gear, sar, gpd))
+```
+
+Total sar per station is calculated as the sum of the sar from the respective metiers, while the gear penetration depth is estimated as a weighted average.
+
+The latter is done in several steps:
+
+```{r}
+# estimate average gear penetration depth per station
+
+# 1. multiply sar per metier with gpd per metier
+sar_2009$sar_gpd <- sar_2009$sar * sar_2009$gpd
+
+# 2. estimate the sum of sar and the sum of (sar * gpd)
+sar_stations <- aggregate(x   = sar_2009[, c("sar", "sar_gpd")],
+                          by  = list(station = sar_2009$station),
+                          FUN = sum)
+
+# 3. mean gpd = sum(sar*gpd) / sum(sar)
+sar_stations$gpd <- sar_stations$sar_gpd / sar_stations$sar
+
+# 4. remove (sar_gpd)
+sar_stations$sar_gpd <- NULL
+```
+
+
+# Merged biomass - trait -fishing data
+
+Finally, the fisheries data are merged with the biomass data and the trait data.
+
+Biomass data (*MWTL_biomass*) are now merged with the taxon's age at maturity data (*MWTL_taxon_Am*) and the taxon's sediment depth occurrence (*MWTL_taxon_Sd*).
+
+Merging biomass and trait composition data is done based on the common column named "taxon" (argument *by*).
+
+The station locations (in *MWTL\$stations*) are also added; this is for plotting purposes only.
+
+```{r}
+MWTL_bfiat <- merge(x  = MWTL_biomass, 
+                    y  = MWTL_taxon_Am,
+                    by = "taxon")
+
+MWTL_bfiat <- merge(x  = MWTL_bfiat, 
+                    y  = MWTL_taxon_Sd,
+                    by = "taxon")
+
+MWTL_bfiat <- merge(MWTL_bfiat,
+                    MWTL$stations,
+                    by = "station")
+
+MWTL_bfiat <- merge(MWTL_bfiat,
+                    sar_stations[, c("station", "sar", "gpd")],
+                    by = "station")
+
+MWTL_bfiat <- MWTL_bfiat[order(MWTL_bfiat$station, MWTL_bfiat$taxon), ]
+
+head(MWTL_bfiat, n = 2)
+```
+
+# Saving the data set
+
+The dataset that contains the taxon biomass, the average age at maturity, relative abundance in different sediment layers, amended with fishing pressure (sar) and average gear penetration depth (gpd) forms the basis for estimating the fisheries impact in the Dutch coastal zone.
+
+How this is done is explained in the next tutorial.
+
+```{r}
+# this assumes that the working directory is where the qmd file is located
+save(file = "../data/derived_data/MWTL_bfiat.rda",      MWTL_bfiat)
+```
+
+# References
+
+Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282
+
+Chamberlain S, Vanhoorne. B (2023). *worrms: World Register of Marine Species (WoRMS) Client*.
+doi:10.32614/CRAN.package.worrms <https://doi.org/10.32614/CRAN.package.worrms>, R package version 0.4.3, <https://CRAN.R-project.org/package=worrms>.
+
+L. Leewis, E.C. Verduin, R. Stolk ; Eurofins AquaSense Macrozoobenthosonderzoek in de Rijkswateren met boxcorer, jaarrapportage MWTL 2015 : waterlichaam: Noordzee Publicatiedatum: 31-03-201775 p.
+Projectnummer Eurofins AquaSense: J00002105.
+Revisie 2, In opdracht van Ministerie van Infrastructuur en Milieu, Rijkswaterstaat Centrale Informatievoorziening (RWS, CIV)
+
+Soetaert, Karline and Olivier Beauchard (2023).
+R-package Btrait: Working with Biological density, taxonomy, and trait composition data.
+Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase IV. <https://github.com/EMODnet/Btrait>
+
+Soetaert, Karline and Olivier Beauchard (2024). R-package Bfiat: Tools for estimating the
+  impact of bottom disturbance on sediment ecosystems. Data product created under the
+  European Marine Observation Data Network (EMODnet) Biology Phase V, under the NECCTON
+  project (New Copernicus Capability for Trophic Ocean Networks), and under the OceanICU
+  (understanding Ocean Carbon) project.
+
+ICES Technical Service, Greater North Sea and Celtic Seas Ecoregions, 29 August 2018 sr.2018.14 Version 2: 22 January 2019 https://doi.org/10.17895/ices.pub.4508 OSPAR request on the production of spatial data layers of fishing intensity/pressure.
+
+# Appendix: visualisation of input data
+
+```{r, echo = FALSE}
+Am_Sd_traits <- cbind(Am_traits, Sd_traits[, -1])
+Am_Sd_meta   <- rbind(Am_meta,   Sd_meta  )
+
+MWTL_summ    <- get_summary(
+      data        = MWTL_biomass,
+      descriptor  = station,
+      taxon       = taxon,     # taxa to estimate traits 
+      value       = biomass)
+  
+MWTL_statbio <- get_trait_density(
+      data        = MWTL_biomass,
+      descriptor  = station,
+      taxon       = taxon,     # taxa to estimate traits 
+      value       = biomass,
+      trait       = Am_Sd_traits,    # trait database
+      trait_class = Am_Sd_meta$trait,
+      trait_score = Am_Sd_meta$value,
+      taxonomy    = Taxonomy)      # estimate traits using taxonomic relation
+
+MWTL_statbio <- merge(MWTL$stations,  MWTL_statbio)
+MWTL_statbio <- merge(MWTL_statbio, MWTL_summ$density)
+MWTL_statbio <- merge(MWTL_statbio, MWTL_summ$taxa)
+
+MWTL_fishing <- merge(MWTL$stations, 
+                      sar_stations[, c("station", "sar", "gpd")])
+
+```
+
+The content of the data can be quickly visualised with Btrait function *map_MWTL*.
+\footnote{of course there are nicer ways to create such plots}.
+
+```{r, fig.width=8, fig.height=10, fig.cap="summary plots of the MWTL_fishing data set, used for estimating the fishing impact assessment"}
+require(shape)   # for writelabel
+COL <- colorRampPalette(c( "#FEEEA0",  "#3E9188", "darkblue"))(100)
+ 
+par(mfrow = c(3, 2), mar = c(2,2,2,2), oma = c(0,2,2,0))
+with (MWTL_fishing,
+      map_MWTL(x = x, y = y, colvar = sar, main = "Swept area ratio",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "m2/m2/yr", pch = 16))
+writelabel("A")
+
+with (MWTL_fishing,
+      map_MWTL(x = x, y = y, colvar = gpd, main = "Gear penetration depth",
+               draw.levels =  FALSE, col = COL,
+               clab = "cm", pch = 16))
+writelabel("B")
+
+with (MWTL_statbio,
+      map_MWTL(x = x, y = y, colvar = biomass, main = "Macrofauna biomass",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "gAFDW/m2", pch = 16))
+writelabel("C")
+
+with (MWTL_statbio,
+      map_MWTL(x = x, y = y, colvar = taxon, main = "Number of macrofauna taxa",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "taxa/m2", pch = 16))
+writelabel("D")
+
+with (MWTL_statbio,
+      map_MWTL(x = x, y = y, colvar = Age.at.maturity, main = "Mean age at maturity",
+               draw.levels =  FALSE, col = COL,
+               clab = "yr", pch = 16))
+writelabel("E")
+
+with (MWTL_statbio,
+      map_MWTL(x = x, y = y, colvar = Substratum.depth.distribution, 
+               main = "Mean living depth",
+               draw.levels =  FALSE, col = COL,
+               clab = "cm", pch = 16))
+writelabel("F")
+```
+
+```{r}
+```

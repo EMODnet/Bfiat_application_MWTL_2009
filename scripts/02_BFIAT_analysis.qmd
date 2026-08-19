@@ -1,0 +1,353 @@
+---
+title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
+subtitle: "part 2 - calculating fishing impact"
+author: "karline soetaert"
+toc: true
+toc-depth: 3
+toc-expand: true
+code-fold: show
+format: 
+  html:
+    self-contained: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: sentence
+abstract: "Assessment of benthic fishing impact requires a data set that contains, alongside benthic taxon biomass and density, the taxon's average age at maturity, and its sediment living depth categorized into trait modalities, together with the fishing pressure in terms of the total swept area ratio and the gear penetration depth. Data from 2009 from the Dutch monitoring of the Northsea were extracted in the previous tutorial. Here we show how these data are used to estimate fishing impact."    
+---
+
+
+```{r}
+# Load necessary libraries 
+require("Bfiat")
+```
+
+In previous tutorial, a dataset was extracted that contains, for 100 stations sampled in 2009,
+
+- the *station* name and longitude and latitude coordinates (*x*, *y*)
+- the station's fishing pressure expressed as total swept area ratio (*sar*, $m^2~m^{-2}~yr^{-1}$),
+- the average gear penetration depth (*gpd*, in cm),
+- the *taxon* name,
+- the taxon *biomass* (in $g~AFDWT~m^{-2}$),
+- the taxon *density* ( in $ind~m^{-2}$),
+- the taxon average *age at maturity* (in year),
+- the taxon relative abundance in different sediment layers (*Sd_0*, ... *Sd\_\>30*).
+
+These data form the basis for estimating the fisheries impact in the Dutch part of the Northsea.
+
+We need the R-package Bfiat (Soetaert and Beauchard, 2024) to estimate the fishing impact.
+
+```{r}
+load(file = "../data/derived_data/MWTL_bfiat.rda")   
+
+head(MWTL_bfiat, n = 2)
+```
+
+# Calculating model parameters
+
+## Intrinsic rate of natural increase, r
+
+The intrinsic rate of natural increase (*r*, $yr^{-1}$) determines the speed of recovery after fishing (Beauchard and Soetaert, 2026).
+It is specific for a taxon, and can be estimated using Bfiat function *par_r*.
+This function requires as input only the taxon's age at maturity.
+
+The parameter $r$ is added to the *MWTL_bfiat* data.frame.
+
+```{r}
+MWTL_bfiat$r <- par_r(age_at_maturity = MWTL_bfiat$Age.at.maturity)
+```
+
+## Depletion fraction, d
+
+The depletion fraction (*d*, $-$) is the fraction of the taxon's biomass that is removed due to fishing.
+It depends on the overlap of the living space of the species and the gear (Beauchard and Soetaert, 2026).
+
+It can be estimated using Bfiat function *par_d*, that takes as input the depth occurrence of the taxon (*fDepth*, *uDepth*), and the mean gear penetration depth (*gpd*).
+The mean gear penetration depth differs among stations, so the taxon's depletion fraction will vary with the station.
+
+```{r}
+MWTL_bfiat$d <- par_d(
+  gpd    = MWTL_bfiat$gpd,
+  
+  # fDepth: fractional occurrence in layers
+  fDepth = MWTL_bfiat[, c( "Sd_0", "Sd_0-5", "Sd_5-15", "Sd_15-30", "Sd_>30")],
+  
+  # uDepth: upper boundary of depth layer
+  uDepth =              c(   0,        0,        5,         15,          30)
+)
+```
+
+## Carrying capacity, K
+
+The biomass carrying capacity *K_biomass* (in $g~AFDWT~m^{-2}$) is the biomass that the species would have in the absence of fishing (Beauchard and Soetaert, 2026).
+
+It estimated from the logistic growth model and the fishing intensity, using Bfiat R-function *par_K*.
+
+We pass the species *biomass*, the fishing intensity (*sar*), and the previously estimated parameters, intrinsic rate of increase (*r*), and depletion fraction (*d*):
+
+```{r}
+MWTL_bfiat$K_biomass <- par_K(
+  
+  density = MWTL_bfiat$biomass,
+  sar     = MWTL_bfiat$sar,
+  
+  r       = MWTL_bfiat$r,
+  d       = MWTL_bfiat$d
+)
+```
+
+# Fishing impact
+
+The impact of fishing for all taxa in the 100 stations for 2009 can now be estimated as the observed *biomass* (for 2009), divided by the calculated carrying capacity (*K_biomass*):
+
+```{r}
+MWTL_bfiat$DK_biomass = MWTL_bfiat$biomass / MWTL_bfiat$K_biomass
+```
+
+For some data points, the combination of high station-specific fishing intensity (sar and gpd) with a low intrinsic rate of increase is such that the model predicts the taxon to be completely eradicated.
+
+Such cases have a carrying capacity equal to *NA*, as it cannot be calculated.
+This need to arouse suspicion if the taxon was highly abundant.
+
+```{r}
+NAS <- subset(MWTL_bfiat, subset = is.na(DK_biomass),
+              select = c(station, sar, taxon, biomass))
+
+NAS <- NAS[order(NAS$biomass),]
+
+knitr::kable(NAS, row.names = FALSE, digits = c(0, 1, 0,3))
+```
+
+There are `r nrow(NAS)` taxa (from a total of `{r}nrow(MWTL_bfiat)`) for which the model did not find a solution, the highest observed biomass being`{r} max(NAS$biomass)`.
+
+These taxa are removed from the subsequent analysis.
+
+```{r}
+MWTL_bfiat <- subset(MWTL_bfiat, subset = ! is.na(DK_biomass))
+```
+
+# Taxon- specific impacts
+
+For each of the taxa present in the 100 stations, we can now estimate their mean depletion due to fishing.
+R-function *aggregate* is very well suited to do this.
+
+```{r}
+taxon_bfiat <- aggregate(x   = list(DK_biomass = MWTL_bfiat$DK_biomass),
+                         by  = list(taxon      = MWTL_bfiat$taxon),
+                         FUN = mean)
+row.names(taxon_bfiat) <- NULL
+taxon_bfiat$fraction_biomass_lost <- 1 - taxon_bfiat$DK_biomass
+
+taxon_bfiat <- taxon_bfiat[order(taxon_bfiat$DK_biomass),]
+
+knitr:: kable(head(taxon_bfiat), row.names = FALSE)
+knitr:: kable(tail(taxon_bfiat), row.names = FALSE)
+summary(taxon_bfiat$fraction_biomass_lost)
+```
+
+The average fraction of taxon biomass removed by fisheries for 2009 is `{r} format(100 *mean(taxon_bfiat$fraction_biomass_lost), digits = 3)` %, ranging inbetween (`{r} format(100 *range(taxon_bfiat$fraction_biomass_lost), digits = 3)` )%.
+
+# Station - specific impacts
+
+We can also estimate station-specific impacts. 
+Before doing so, we estimate the carrying capacity of taxon density, as we will need this later.
+
+```{r}
+MWTL_bfiat$K_density <- with (MWTL_bfiat,
+                   K_biomass * density / biomass)
+station_bfiat <- aggregate(x   = list(biomass   = MWTL_bfiat$biomass,
+                                      density   = MWTL_bfiat$density,
+                                      K_density = MWTL_bfiat$K_density,
+                                      K_biomass = MWTL_bfiat$K_biomass),
+                           by  = list(station   = MWTL_bfiat$station,
+                                      x         = MWTL_bfiat$x,
+                                      y         = MWTL_bfiat$y,
+                                      sar       = MWTL_bfiat$sar,
+                                      gpd       = MWTL_bfiat$gpd),
+                           FUN = sum)
+
+station_bfiat$DK_biomass       <- station_bfiat$biomass/station_bfiat$K_biomass
+station_bfiat$fraction_biomass_lost <- 1 - station_bfiat$DK_biomass
+
+row.names(station_bfiat)       <- NULL
+station_bfiat                  <- station_bfiat[order(station_bfiat$DK_biomass),]
+
+knitr:: kable(head(station_bfiat), row.names = FALSE, digits = 2)
+knitr:: kable(tail(station_bfiat), row.names = FALSE, digits = 2)
+summary(station_bfiat$fraction_biomass_lost)
+
+```
+
+The average fraction of station biomass removed by fisheries for 2009 is `{r} format(100*mean(station_bfiat$fraction_biomass_lost), digits = 2)` %, ranging in between (`{r} 100*range(station_bfiat$fraction_biomass_lost)` %).
+
+```{r, fig.width=8, fig.height=6}
+par(mfrow = c(1,2), oma = c(2,0,2,0))
+hist(1 - MWTL_bfiat$DK_biomass, n = 100, freq = FALSE,
+     main = "species level", xlim = c(0, 1),
+     xlab = "fraction removed, [-]", ylab = "#")
+
+hist(1 - station_bfiat$DK_biomass, n = 20, freq = FALSE, 
+     main = "station level", xlim = c(0, 1),
+     xlab = "fraction removed, [-]", ylab = "#")
+
+mtext(outer = TRUE, side = 3, line = 0, "fraction removed by fisheries", cex = 2)
+
+stats <- rbind(
+  summary(1 - MWTL_bfiat$DK_biomass),
+  summary(1 - taxon_bfiat$DK_biomass),
+  summary(1 - station_bfiat$DK_biomass))
+row.names(stats) = c("station_taxon", "taxon_specific", "station_specific")
+knitr:: kable(stats, 
+              caption = "statistics of fraction lost due to fishing (for 2009)", 
+              digits = 3)
+```
+
+# Ecosystem functioning
+
+## The bioturbation and bio-irrigation potential
+
+The functions *get_Db_index* and *get_irr_index* from the *Btrait* package (Soetaert and Beauchard, 2023) estimate the bioturbation and bioirrigation potential based on taxon densities and biomasses.
+
+They require specific *trait* information, and the individual *weight* of the species.
+
+Trait information for these indices has been compiled in databases *Traits_Db* and *Traits_irr*, also available from the Btrait package.
+
+While extracting the traits for the taxa, the taxonomic tree (*Taxonomy*) is passed to allow retrieving traits for undocumented species based on their taxonomic relationships.
+
+The bioturbation and bioirrigation index is estimated for the 2009 community, and for the community without fishing pressure, i.e. based on the carrying capacity.
+
+```{r}
+Db_2009     <- get_Db_index(
+                            data       = MWTL_bfiat,
+                            descriptor = station,
+                            taxon      = taxon,
+                            density    = density,
+                            biomass    = biomass,
+                            trait      = Traits_Db, 
+                            taxonomy   = Taxonomy)$descriptor
+
+Db_pristine <- get_Db_index(
+                            data       = MWTL_bfiat,
+                            descriptor = station,
+                            taxon      = taxon,
+                            density    = K_density,
+                            biomass    = K_biomass,
+                            trait      = Traits_Db, 
+                            taxonomy   = Taxonomy)$descriptor
+
+colnames(Db_pristine)[2] <- "K_BPc"
+
+Irr_2009 <- get_irr_index(
+                            data       = MWTL_bfiat,
+                            descriptor = station,
+                            taxon      = taxon,
+                            density    = density,
+                            biomass    = biomass,
+                            trait      = Traits_irr, 
+                            taxonomy   = Taxonomy)$descriptor
+Irr_pristine <- get_irr_index(
+                            data       = MWTL_bfiat,
+                            descriptor = station,
+                            taxon      = taxon,
+                            density    = K_density,
+                            biomass    = K_biomass,
+                            trait      = Traits_irr, 
+                            taxonomy   = Taxonomy)$descriptor
+colnames(Irr_pristine)[2] <- "K_IPc"
+
+# merge the model data
+station_bfiat <- merge(station_bfiat, Db_2009)
+station_bfiat <- merge(station_bfiat, Db_pristine)
+station_bfiat <- merge(station_bfiat, Irr_2009)
+station_bfiat <- merge(station_bfiat, Irr_pristine)
+
+# 2009 value over value without fishing (carrying capacity)
+station_bfiat$DK_BPc    <- station_bfiat$BPc / station_bfiat$K_BPc
+station_bfiat$DK_IPc    <- station_bfiat$IPc / station_bfiat$K_IPc
+
+station_bfiat$fraction_BPc_lost  <- 1 - station_bfiat$DK_BPc
+station_bfiat$fraction_IPc_lost  <- 1 - station_bfiat$DK_IPc
+```
+
+The average fraction of station bioturbation potential removed by fisheries for 2009 is `r format(100*mean(station_bfiat$fraction_BPc_lost), digits = 2)` %, ranging in between (`r format(100*range(station_bfiat$fraction_BPc_lost), digits = 2)` %).
+
+The average fraction of station bioirrigation potential removed by fisheries for 2009 is `r format(100*mean(station_bfiat$fraction_IPc_lost), digits = 2)` %, ranging in between (`r format(100*range(station_bfiat$fraction_IPc_lost), digits = 2)` %).
+
+```{r}
+summary(station_bfiat[, c("fraction_biomass_lost", 
+                          "fraction_BPc_lost", 
+                          "fraction_IPc_lost")], digits = 1)
+
+save(file = "../data/derived_data/station_bfiat.rda", station_bfiat)
+```
+
+# References
+
+Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282
+
+
+Chamberlain S, Vanhoorne.B (2023).
+*worrms: World Register of Marine Species (WoRMS) Client*.
+doi:10.32614/CRAN.package.worrms <https://doi.org/10.32614/CRAN.package.worrms>, R package version 0.4.3, <https://CRAN.R-project.org/package=worrms>.
+
+L. Leewis, E.C. Verduin, R. Stolk ; Eurofins AquaSense Macrozoobenthosonderzoek in de Rijkswateren met boxcorer, jaarrapportage MWTL 2015 : waterlichaam: Noordzee Publicatiedatum: 31-03-201775 p.
+Projectnummer Eurofins AquaSense: J00002105.
+Revisie 2, In opdracht van Ministerie van Infrastructuur en Milieu, Rijkswaterstaat Centrale Informatievoorziening (RWS, CIV)
+
+Soetaert, Karline and Olivier Beauchard (2023).
+R-package Btrait: Working with Biological density, taxonomy, and trait composition data.
+Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase IV. <https://github.com/EMODnet/Btrait>
+
+Soetaert, Karline and Olivier Beauchard (2024). R-package Bfiat: Tools for estimating the
+  impact of bottom disturbance on sediment ecosystems. Data product created under the
+  European Marine Observation Data Network (EMODnet) Biology Phase V, under the NECCTON
+  project (New Copernicus Capability for Trophic Ocean Networks), and under the OceanICU
+  (understanding Ocean Carbon) project.
+  
+ICES Technical Service, Greater North Sea and Celtic Seas Ecoregions, 29 August 2018 sr.2018.14 Version 2: 22 January 2019 https://doi.org/10.17895/ices.pub.4508 OSPAR request on the production of spatial data layers of fishing intensity/pressure.
+
+# Appendix: visualisation of modeled data
+
+The content of the data can be quickly visualised with Btrait function *map_MWTL*.
+(of course there are nicer ways to create such plots)
+
+```{r, fig.width=8, fig.height=10}
+par(mfrow = c(3, 2), mar = c(2,2,2,2))
+COL <- colorRampPalette(c( "#FEEEA0",  "#3E9188", "darkblue"))(100)
+
+with (station_bfiat,
+      map_MWTL(x = x, y = y, colvar = biomass, main = "Biomass",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "gADWT/m2", pch = 16, cex = 1.5))
+
+with (station_bfiat,
+      map_MWTL(x = x, y = y, colvar = fraction_biomass_lost, main = "Fraction of biomass lost",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "-", pch = 16, cex = 1.5))
+
+with (station_bfiat,
+      map_MWTL(x = x, y = y, colvar = BPc, main = "Bioturbation potential",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "-", pch = 16, cex = 1.5))
+
+with (station_bfiat,
+      map_MWTL(x = x, y = y, colvar = fraction_BPc_lost, main = "Fraction of bioturbation lost",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "-", pch = 16, cex = 1.5))
+
+with (station_bfiat,
+      map_MWTL(x = x, y = y, colvar = IPc, main = "Bioirrigation potential",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "-", pch = 16, cex = 1.5))
+
+with (station_bfiat,
+      map_MWTL(x = x, y = y, colvar = fraction_IPc_lost, main = "Fraction of bio-irrigation lost",
+               draw.levels =  FALSE, log = "c", col = COL,
+               clab = "-", pch = 16, cex = 1.5))
+```
+
+```{r}
+```

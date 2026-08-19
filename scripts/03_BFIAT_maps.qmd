@@ -1,0 +1,302 @@
+---
+title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
+subtitle: "part 3 - gridding fishing impact"
+author: "karline soetaert"
+date: 13-03-2026
+toc: true
+toc-depth: 3
+toc-expand: true
+code-fold: show
+format: 
+  html:
+    self-contained: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: sentence
+abstract: "Fishing impact on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. Here we use these data to generate full coverage maps. We do this by simple kriging, and then masking the land. After that, netCDF files are generated."    
+---
+
+For mapping we use three R packages: raster (Hijmans, 2025), gstat (Pebesma 2004), and sp (Pebesma and Bivan, 2005): 
+
+```{r, warning = FALSE, message=FALSE}
+require(raster)
+require(sp)
+require(gstat)
+```
+
+```{r, warning = FALSE, message=FALSE}
+require(RColorBrewer)
+col.fau <- colorRampPalette(c( "darkblue", "#3E9188",  "#FEEEA0"))(100)
+```
+
+The fishing impact for 100 stations in the Dutch part of the Northsea for the year 2009 were modeled in previous tutorial, and its output written to data.frame called *station_bfiat*.
+
+The data.frame contains:
+
+* the *station* names and positions (*x*, *y*), 
+* two fishing parameters: the annual swept area ratio (*sar*, $yr^{-1}$), and the gear penetration depth (*gpd*, $cm$),
+* the observed macrofaunal *biomass* ($gAFDW~m^{-2}$) and *density* ($ind~m^{-2}$) for the year 2009, 
+* the carrying capacity in terms of biomass and density (*K_biomass*, *K_density*); this is the biomass or density that would be present in the absence of fishing,
+* the fishing impact on biomass, estimated as:
+      - the current biomass as a fraction of the carrying capacity(*DK_biomass = biomass/K_biomass*),
+      - the fractional loss of biomass *fraction_biomass_lost = 1 = DK_biomass*,
+* the current bioturbation potential (*BPc*), and the bioturbation potential at carrying capacity (*K_BPc*),
+* the fishing impact on bioturbation potential: 
+      - the current bioturbation potential as a fraction of the unfished potential (*DK_BPc = BPc/K_BPc*), 
+      - the fractional loss of bioturbation potential (*fraction_BPc_lost = 1 - DK_BPc*), 
+* the current bioirrigation potential (*IPc*), and the bioirrigation potential at carrying capacity (*K_IPc*),
+* the fishing impact on bioirrigation potential: 
+      - the current bioirrigation potential as a fraction of the unfished potential  (*DK_IPc = IPc/K_IPc*),
+      - the fractional loss of bioirrigation potential (*fraction_IPc_lost = 1 - DK_IPc*). 
+
+```{r}
+load("../data/derived_data/station_bfiat.rda")
+head(station_bfiat)
+```
+
+# Kriging
+
+For ease of interpolation, a function is created:
+
+```{r}
+interp <- function(df = station_bfiat,                  # data.frame with data 
+                   ext = extent(2.6, 6.65, 51.6, 55.5), # extension of the grid
+                   nc       = 350, 
+                   nc.grid  = 400,        # number of columns in grid
+                   z,                     # variable name from df
+                   mod      = vgm("Mat"), # model to use
+                   log      = FALSE,      # logarithm transform
+                   plot.vgm = TRUE,       # plot the variogram
+                   width    = NA, 
+                   ...
+                   ){
+  cat(z, "\n")
+
+# number of rows used
+nr  <- round(abs(ext[4] - ext[3]) / (abs(ext[2] - ext[1]) / nc), 0)
+
+# clean up the data
+# ---------------------  
+  df   <- df[df$x >= ext[1] & df$x <= ext[2]  &
+             df$y >= ext[3] & df$y <= ext[4], ]
+
+  coordinates(df) <- ~x+y
+  crs(df)         <- "+proj=longlat +datum=WGS84"
+  
+  if (nrow(zerodist(df)) > 0)
+    df      <- df[-zerodist(df)[,1],]
+  
+# create kriging grid
+# ---------------------  
+  rg.x    <- abs(ext[1] - ext[2])
+  rg.y    <- abs(ext[3] - ext[4])
+
+  nr.grid <- ceiling(rg.y/(rg.x/nc.grid))
+  grd     <- GridTopology(
+      cellcentre.offset = c(ext[1],       ext[3]),        
+      cellsize          = c(rg.x/nc.grid, rg.x/nc.grid), 
+      cells.dim         = c(nc.grid,      nr.grid)       
+  )
+  
+  grd      <- SpatialGrid(grd)
+  crs(grd) <- "+proj=longlat +datum=WGS84"
+
+# model formula
+# ---------------------  
+  if (log == FALSE){
+    f <- as.formula(paste(z, "~1", sep = ""))
+  
+  } else {
+    f <- as.formula(paste("log(", z, "+1)", "~1", sep = ""))
+  }
+
+# calculate variogram
+# ---------------------  
+  
+  if (is.na(width)) 
+    vgm  <- variogram(f, data = df, ...)
+  else
+    vgm  <- variogram(f, data = df, width = width, ...)
+  
+  fit  <- fit.variogram(vgm, model = mod)
+  print(fit)
+  if (plot.vgm == TRUE){
+    plot(vgm$dist, vgm$gamma, 
+         ylim = c(0, max(vgm$gamma)),
+         xlab = "Distance", ylab = "Semivariance")
+    lines(variogramLine(fit, maxdist = max(vgm$dist)))
+  }
+  
+# interpolate
+# ---------------------  
+  k <- krige(f, df, grd, model = fit)
+  k <- as(k, "SpatialPointsDataFrame")
+  r <- rasterize(k, 
+                 raster(xmn = ext[1], xmx = ext[2],
+                        ymn = ext[3], ymx = ext[4], 
+                        nrows = nr, ncols = nc), 
+                 fun = mean)
+  names(r)[c(2, 3)] <- c("pred", "var")
+  r$pred[r$pred < 0] <- 0
+
+  return(r)
+
+}
+```
+
+```{r}
+
+# variable names in input to krige
+nn       <- c("sar",  
+              "fraction_biomass_lost", 
+              "fraction_BPc_lost", 
+              "fraction_IPc_lost")
+
+longname <- c("swept area ratio", 
+              "fraction biomass lost by fishing", 
+              "fraction bioturbation lost by fishing", 
+              "fraction bioirrigation lost by fishing")
+units    <- c("/yr", "-", "-", "-")
+```
+
+```{r, fig.width=10, fig.height=10}
+par(mfrow = c(2, 2))
+
+ext = extent(2.6, 6.65, 51.6, 55.5)
+
+# number of columns used
+nc  <- 350
+
+# number of rows used
+nr  <- round(abs(ext[4] - ext[3]) / (abs(ext[2] - ext[1]) / nc), 0)
+
+# create bricks, 4 layers
+b      <- brick(nl = 4, ext, nrows = nr, ncols = nc)
+
+b[[1]] <- interp(z   = "sar", 
+                 mod = vgm(
+                      model  = "Exc",
+                      nugget = 2,
+                      psill  = 6,
+                      range  = 50)
+            )$pred
+b[[2]] <- interp(z   = "fraction_biomass_lost", 
+                 mod = vgm(
+                      model  = "Lin",
+                      nugget = 0.01,
+                      psill  = 0.025,
+                      range  = 100)
+            )$pred
+
+b[[3]] <- interp(z   = "fraction_BPc_lost", 
+                 mod = vgm(
+                      model  = "Lin",
+                      nugget = 0.01,
+                      psill  = 0.05,
+                      range  = 100)
+            )$pred
+
+b[[4]] <- interp(z   = "fraction_IPc_lost", 
+                 mod = vgm(
+                      model  = "Lin",
+                      nugget = 0.005,
+                      psill  = 0.01,
+                      range  = 100), 
+                 width = 10
+            )$pred
+names(b) <- longname
+```
+
+# Masking and plotting
+
+A number of shapefiles have been downloaded and put in a dataset.
+They are:
+
+* eez_nl, the border of the Dutch exclusive economic zone in the Northsea
+* cst_nl, the coast around the Dutch coast
+* ws_nl, the wadden sea area
+
+These shape files are used to mask the gridded data outside of the dutch eez area.
+
+Masking is done in a number of steps
+
+```{r}
+load(file = "../data/raw_data/shapefiles.rda") # eez_nl, cstl_nl, ws_nl
+
+mask_to_mwtl <- function(b){
+  BB <- mask(b,  eez_nl)                     # dutch economic zone
+  BB <- mask(BB, cstl_nl,   inverse = TRUE)  # only offshore of coast 
+  BB <- mask(BB, ws_nl,     inverse = TRUE)  # remove Waddenzee
+  crs(BB) <-  "EPSG:4326" 
+  BB
+}
+
+plot_brick <- function(b, col = col.fau, legend = "-", ...){
+  plot (b, col = col, legend.args = list(text = legend), ...)
+  plot (cstl_nl,   col = "grey", add = TRUE)
+  lines(cstl_nl,   col = "black")
+  lines(eez_nl,    col = "black")
+  box()
+}
+
+for (i in 1:4) 
+  b[[i]] <- mask_to_mwtl(b[[i]])
+
+
+```
+
+
+```{r, fig.width=10, fig.height=10}
+require(shape)
+par(mfrow = c(2,2), oma = c(0,0,0,2), las = 1)
+
+plot_brick(b[[1]],  main = "swept area ratio", 
+           legend = '/yr')
+  writelabel(LETTERS[1])
+
+plot_brick(b[[2]],  main = "fraction biomass lost by fishing", legend = '-')
+  writelabel(LETTERS[2])
+plot_brick(b[[3]],  main = "fraction bioturbation lost by fishing", legend = '-')
+  writelabel(LETTERS[3])
+plot_brick(b[[4]],  main = "fraction bioirrigation lost by fishing", legend = '-')
+  writelabel(LETTERS[4])
+
+```
+
+# Save as separate netcdf files
+
+```{r}
+
+for (i in 1:4)
+writeRaster(x         = b[[i]], 
+            filename  = paste("../data/derived_data/", 
+                              nn[i], 
+                              ".nc", sep = ""), 
+            overwrite = TRUE, 
+            format    = "CDF",  
+            varname   = nn[i], 
+            varunit   = units[i], 
+            longname  = longname[i], 
+            xname     = "longitude", 
+            yname     = "latitude")
+```
+
+
+In next document, one NETCDF file will be generated.
+
+# References
+
+Hijmans R (2025). _raster: Geographic Data Analysis and Modeling_. doi:10.32614/CRAN.package.raster
+  <https://doi.org/10.32614/CRAN.package.raster>, R package version 3.6-32,
+  <https://CRAN.R-project.org/package=raster>.
+  
+Pebesma, E.J., 2004. Multivariable geostatistics in S: the gstat package. Computers & Geosciences, 30:
+  683-691.
+
+Pebesma E, Bivand R (2005). “Classes and methods for spatial data in R.” _R News_, *5*(2), 9-13.
+  <https://CRAN.R-project.org/doc/Rnews/>.
+  
