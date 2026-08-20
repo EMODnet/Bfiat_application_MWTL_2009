@@ -1,5 +1,5 @@
 ---
-title: "Assessment of fisheries impact in the Dutch part of the Northsea, for 2009. The BFIAT approach"
+title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
 subtitle: "part 1 - preparing data sets"
 abstract: "Benthic fishing impact assessment using the BFIAT approach, requires (1) benthic taxon biomass or density data, (2) the taxon's average age at maturity, and sediment living depth, as well as (3) fishing intensity in terms of the swept area ratio and mean gear penetration depth. Here it is shown how to create such a dataset by combining species biomass data with trait databases and taxonomic trees. The data used are the Dutch Northsea macrofauna monitoring data from the year 2009 (the MWTL data), combined with a databases with macrofaunal traits, and fisheries data from ICES. The final data set is a large data.frame, that contains, for each sampling station, the species biomass and density, their age at maturity, and the occurrence in several sediment depth classes. For each station, also the swept area ratio and mean gear penetration depth is in the data.frame. This data forms the input for the BFIAT methodology. How to apply the Bfiat model is explained in [next tutorial](02_BFIAT_analysis.qmd)" 
 ---
