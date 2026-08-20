@@ -150,7 +150,7 @@ Three variables will be added to the netCDF file (see [BFIAT analysis tutorial](
 
 * the fractional loss of biomass due to trawling, *fraction_biomass_lost*; this quantity is estimated as  *1 - biomass/K_biomass*, where *biomass* is the observed biomass (for 2009), and K_biomass is the carrying capacity, i.e. the biomass that would be attained in the absence of fishing
 
-* the fractional loss of bioirrigation potential due to trawling (*fraction_IPc_lost = 1 - IPc/K_IPc*). 
+* the fractional loss of bioturbation potential due to trawling (*fraction_BPc_lost = 1 - BPc/K_BPc*). 
 
 * the fractional loss of bioirrigation potential due to trawling (*fraction_IPc_lost = 1 - IPc/K_IPc*). 
 
