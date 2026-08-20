@@ -39,7 +39,7 @@ nc    <- create.nc("../product/fishing_impact_2009_bfiat.nc")
 # Defining the dimensions
 
 The fishing impact maps are defined in longitude, latitude coordinates. They apply to the year 2009. 
-We define three dimensions (lon, lat, time), along with their attributes (units, standard_name and long_name) and put them in the newly created netCDF file:
+We define two dimensions (lon, lat), along with their attributes (units, standard_name and long_name) and put them in the newly created netCDF file:
 
 ```{r}
 # ----------------
@@ -101,46 +101,6 @@ att.put.nc(nc, variable = "lat",
 # Put data
 var.put.nc(nc, variable = "lat", 
                data     = lat) 
-
-# ----------------
-# time
-# ----------------
-# Define time dimension
-dim.def.nc(nc, dimname   = "time", 
-               dimlength = 1) 
-
-# Define time variable
-var.def.nc(nc, varname    = "time", 
-               vartype    = "NC_DOUBLE", 
-               dimensions = "time")
-
-# Add attributes
-att.put.nc(nc, variable = "time", 
-               name     = "standard_name", 
-               type     = "NC_CHAR", 
-               value    = "time")
-
-att.put.nc(nc, variable = "time", 
-               name     = "long_name", 
-               type     = "NC_CHAR", 
-               value    = "year of the fishing impact assessment")
-
-att.put.nc(nc, variable = "time", 
-               name     = "units", 
-               type     = "NC_CHAR", 
-               value    = "year")
-
-att.put.nc(nc, variable = "time", 
-               name     = "calendar", 
-               type     = "NC_CHAR", 
-               value    = "gregorian")
-
-# Put data
-var.put.nc(nc, variable = "time", 
-               data     = 2009.)
-
-# Check
-#var.get.nc(nc, variable = "time")
 
 ```
 
