@@ -5,9 +5,12 @@
 Demersal fisheries are a major contributor to global food supply, but at the same time significantly affect marine ecosystem functioning. Physical contact of fishing gear with the seabed induces many changes to the sediment, including a direct mortality of benthic organisms. 
 Understanding the impact of bottom trawling gear on benthic life is a necessary step towards a correct assessment of fisheries impact and eventually fisheries management.
 
-The Bfiat model (Beauchard and Soetaert, 2026) estimates reductions in benthic biomass, density or ecosystem functioning due to bottom trawling. Here its methodology is applied to benthic data from EMODnet biology. 
+The Bfiat model (Beauchard and Soetaert, 2026) estimates reductions in benthic biomass, density or ecosystem functioning due to bottom trawling. 
 
-The data are from the Dutch part of the North sea, for the year 2009. Using the Bfiat model, we quantify how bottom fishing interacts with species life-history traits to shape benthic state in terms of reduction in benthic biomass and the potential of the benthic fauna to mix and bio-irrigate the sediment (the so-called bioturbation and bio-irrigation potential of sediments). The two latter traits are important as they affect sediment geochemistry and global biogeochemical cycles.
+Here its methodology is applied to benthic data from EMODnet biology. 
+
+The data are from the Dutch part of the North sea, for the year 2009 (the MWTL data). 
+Using the Bfiat model, we quantify how bottom fishing interacts with species life-history traits to shape benthic state in terms of reduction in benthic biomass and the potential of the benthic fauna to mix and ventilate the sediment (the two latter via the so-called bioturbation and bio-irrigation potential). Sediment mixing and ventilation are important ecosystem functions, as they affect sediment geochemistry and global biogeochemical cycles.
 
 The source code is in directory *analysis* as a number of quarto files. The entire procedure can be run from the Terminal (with directory set to analysis) by writing:
 
@@ -55,7 +58,21 @@ All these data were made available from the Btrait package.
 
 ## Data product
 
-{{data_product_description}}
+The product contains the fractional reductions due to bottom trawling for the following variables:
+
+* macrofaunal biomass (*fraction_biomass_lost*)
+* bioturbation potential (*fraction_BPc_lost*)
+* bioirrigation potential (*fraction_IPc_lost*)
+
+for the MWTL data for the year 2009. 
+
+fractional loss for biomass is estimated as 
+
+$$fraction_biomass_lost = 1 - \frac{biomass}{K\_biomass},$$ 
+
+where *biomass* is the observed total biomass, as obtained from the EMODnet data portal, and *K_biomass* is the carrying capacity, i.e. the biomass that would be attained in the absence of fishing. 
+
+The larger is the *fraction_biomass_lost*, the higher is the impact of fisheries on benthic biomass.
 
 ## More information:
 
