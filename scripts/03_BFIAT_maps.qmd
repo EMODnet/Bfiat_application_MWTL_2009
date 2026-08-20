@@ -1,23 +1,7 @@
 ---
 title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
 subtitle: "part 3 - gridding fishing impact"
-author: "karline soetaert"
-date: 13-03-2026
-toc: true
-toc-depth: 3
-toc-expand: true
-code-fold: show
-format: 
-  html:
-    self-contained: true
-execute:
-  echo: true
-  warning: false
-  message: false
-editor: 
-  markdown: 
-    wrap: sentence
-abstract: "Fishing impact on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. Here we use these data to generate full coverage maps. We do this by simple kriging, and then masking the land. After that, netCDF files are generated."    
+abstract: "In [previous tutorial](02_BFIAT_analysis.qmd), the impact of fishing on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. For 100 stations, the reduction in terms of total biomass, bioturbation potential and bioirrrigation potential was estimated. Here we use these station-specific data to generate full coverage maps. We do this by simple kriging, and then masking the results using several shapefiles. After that, small netCDF files are generated. [Next tutorial](04_BFIAT_netCDF.qmd) will use these files to create a netCDF file that can be read by the EMODnet data viewer"    
 ---
 
 For mapping we use three R packages: raster (Hijmans, 2025), gstat (Pebesma 2004), and sp (Pebesma and Bivan, 2005): 
@@ -40,18 +24,20 @@ The data.frame contains:
 * the *station* names and positions (*x*, *y*), 
 * two fishing parameters: the annual swept area ratio (*sar*, $yr^{-1}$), and the gear penetration depth (*gpd*, $cm$),
 * the observed macrofaunal *biomass* ($gAFDW~m^{-2}$) and *density* ($ind~m^{-2}$) for the year 2009, 
+
 * the carrying capacity in terms of biomass and density (*K_biomass*, *K_density*); this is the biomass or density that would be present in the absence of fishing,
+
 * the fishing impact on biomass, estimated as:
       - the current biomass as a fraction of the carrying capacity(*DK_biomass = biomass/K_biomass*),
-      - the fractional loss of biomass *fraction_biomass_lost = 1 = DK_biomass*,
+      - the fractional loss of biomass *fraction_biomass_lost = 1 - biomass/K_biomass*,
 * the current bioturbation potential (*BPc*), and the bioturbation potential at carrying capacity (*K_BPc*),
 * the fishing impact on bioturbation potential: 
       - the current bioturbation potential as a fraction of the unfished potential (*DK_BPc = BPc/K_BPc*), 
-      - the fractional loss of bioturbation potential (*fraction_BPc_lost = 1 - DK_BPc*), 
+      - the fractional loss of bioturbation potential (*fraction_BPc_lost = 1 - BPc/K_BPc*), 
 * the current bioirrigation potential (*IPc*), and the bioirrigation potential at carrying capacity (*K_IPc*),
 * the fishing impact on bioirrigation potential: 
       - the current bioirrigation potential as a fraction of the unfished potential  (*DK_IPc = IPc/K_IPc*),
-      - the fractional loss of bioirrigation potential (*fraction_IPc_lost = 1 - DK_IPc*). 
+      - the fractional loss of bioirrigation potential (*fraction_IPc_lost = 1 - IPc/K_IPc*). 
 
 ```{r}
 load("../data/derived_data/station_bfiat.rda")

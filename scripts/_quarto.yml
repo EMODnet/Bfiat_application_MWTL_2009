@@ -1,0 +1,25 @@
+project:
+   type: website
+   output-dir: ../docs
+
+website:
+   title: "Assessment of fisheries impact in the Dutch part of the Northsea, for 2009. The BFIAT approach"
+  
+author: "karline soetaert"
+toc: true
+toc-depth: 3
+toc-expand: true
+
+code-fold: show
+
+format: 
+  html:
+    self-contained: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: sentence
+   

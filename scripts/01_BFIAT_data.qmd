@@ -1,22 +1,7 @@
 ---
 title: "Assessment of fisheries impact in the Dutch part of the Northsea, for 2009. The BFIAT approach"
 subtitle: "part 1 - preparing data sets"
-author: "karline soetaert"
-toc: true
-toc-depth: 3
-toc-expand: true
-code-fold: show
-format: 
-  html:
-    self-contained: true
-execute:
-  echo: true
-  warning: false
-  message: false
-editor: 
-  markdown: 
-    wrap: sentence
-abstract: "Benthic fishing impact assessment using the BFIAT approach, requires (1) benthic taxon biomass or density data, (2) the taxon's average age at maturity, and sediment living depth, as well as (3) fishing intensity in terms of the swept area ratio and mean gear penetration depth. Here it is shown how to create such a dataset by combining species biomass data with trait databases and taxonomic trees. The data used are the Dutch Northsea macrofauna monitoring data from the year 2009 (the MWTL data), combined with a databases with macrofaunal traits, and fisheries data from ICES. The final data set is a large data.frame, that contains, for each sampling station, the species biomass and density, their age at maturity, and the occurrence in several sediment depth classes. For each station, also the swept area ratio and mean gear penetration depth is in the data.frame. This data forms the input for the BFIAT methodology." 
+abstract: "Benthic fishing impact assessment using the BFIAT approach, requires (1) benthic taxon biomass or density data, (2) the taxon's average age at maturity, and sediment living depth, as well as (3) fishing intensity in terms of the swept area ratio and mean gear penetration depth. Here it is shown how to create such a dataset by combining species biomass data with trait databases and taxonomic trees. The data used are the Dutch Northsea macrofauna monitoring data from the year 2009 (the MWTL data), combined with a databases with macrofaunal traits, and fisheries data from ICES. The final data set is a large data.frame, that contains, for each sampling station, the species biomass and density, their age at maturity, and the occurrence in several sediment depth classes. For each station, also the swept area ratio and mean gear penetration depth is in the data.frame. This data forms the input for the BFIAT methodology. How to apply the Bfiat model is explained in [next tutorial](02_BFIAT_analysis.qmd)" 
 ---
 
 ```{r}
@@ -331,7 +316,7 @@ head(MWTL_bfiat, n = 2)
 
 The dataset that contains the taxon biomass, the average age at maturity, relative abundance in different sediment layers, amended with fishing pressure (sar) and average gear penetration depth (gpd) forms the basis for estimating the fisheries impact in the Dutch coastal zone.
 
-How this is done is explained in the next tutorial.
+How this is done is explained in the [next tutorial](02_BFIAT_analysis.qmd).
 
 ```{r}
 # this assumes that the working directory is where the qmd file is located

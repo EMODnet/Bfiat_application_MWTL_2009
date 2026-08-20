@@ -1,22 +1,7 @@
 ---
 title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
 subtitle: "part 2 - calculating fishing impact"
-author: "karline soetaert"
-toc: true
-toc-depth: 3
-toc-expand: true
-code-fold: show
-format: 
-  html:
-    self-contained: true
-execute:
-  echo: true
-  warning: false
-  message: false
-editor: 
-  markdown: 
-    wrap: sentence
-abstract: "Assessment of benthic fishing impact requires a data set that contains, alongside benthic taxon biomass and density, the taxon's average age at maturity, and its sediment living depth categorized into trait modalities, together with the fishing pressure in terms of the total swept area ratio and the gear penetration depth. Data from 2009 from the Dutch monitoring of the Northsea were extracted in the previous tutorial. Here we show how these data are used to estimate fishing impact."    
+abstract: "Assessment of benthic fishing impact requires a data set that contains, alongside benthic taxon biomass and density, the taxon's average age at maturity, and its sediment living depth categorized into trait modalities, together with the fishing pressure in terms of the total swept area ratio and the gear penetration depth. Data from 2009 from the Dutch monitoring of the Northsea were extracted in the [previous tutorial](01_BFIAT_data.qmd). Here we show how these data are used to estimate fishing impact."    
 ---
 
 
@@ -25,7 +10,7 @@ abstract: "Assessment of benthic fishing impact requires a data set that contain
 require("Bfiat")
 ```
 
-In previous tutorial, a dataset was extracted that contains, for 100 stations sampled in 2009,
+In [previous tutorial](01_BFIAT_data.qmd), a dataset was extracted that contains, for 100 stations sampled in 2009,
 
 - the *station* name and longitude and latitude coordinates (*x*, *y*)
 - the station's fishing pressure expressed as total swept area ratio (*sar*, $m^2~m^{-2}~yr^{-1}$),
@@ -257,8 +242,11 @@ Irr_pristine <- get_irr_index(
                             trait      = Traits_irr, 
                             taxonomy   = Taxonomy)$descriptor
 colnames(Irr_pristine)[2] <- "K_IPc"
+```
 
-# merge the model data
+The fisheries impacts for each station are now merged into one data.frame.
+
+```{r}
 station_bfiat <- merge(station_bfiat, Db_2009)
 station_bfiat <- merge(station_bfiat, Db_pristine)
 station_bfiat <- merge(station_bfiat, Irr_2009)
@@ -283,6 +271,8 @@ summary(station_bfiat[, c("fraction_biomass_lost",
 
 save(file = "../data/derived_data/station_bfiat.rda", station_bfiat)
 ```
+
+In the [next tutorial](03_BFIAT_maps.qmd), we will use simple kriging to create full coverage maps from these station-specific data.
 
 # References
 

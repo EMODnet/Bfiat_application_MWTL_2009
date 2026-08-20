@@ -1,42 +1,45 @@
 ---
 title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
-subtitle: "part 4 - creating the NETCFD file"
-author: "karline soetaert"
-date: 13-03-2026
-toc: true
-toc-depth: 3
-toc-expand: true
-code-fold: show
-format: 
-  html:
-    self-contained: true
-execute:
-  echo: true
-  warning: false
-  message: false
-editor: 
-  markdown: 
-    wrap: sentence
-abstract: "Fishing impact on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. We use the kriged data to generate one fully documented netCDF file"    
+subtitle: "part 4 - creating the EMDOnet NETCFD file"
+abstract: "Fishing impact on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. In  [previous tutorial](02_BFIAT_analysis.qmd) we generated interpolated data for the dutch economic zone. These data were exported as small netCDF files. Here we generate one fully documented netCDF file, that can be used as input to the EMODnet viewer"    
 ---
 
-# Opening separate NETCDF files and reading their contents
+# Opening the separate NETCDF files and reading their contents
+
+We will use the R-package RNetCDF (Michna P, Woods M, 2026) to read and create netCDF files.
 
 ```{r}
 library(RNetCDF)
+```
+
+The data that were interpolated to the Dutch exclusive economic zone are extracted first:
+
+```{r}
 ncipc <- open.nc("../data/derived_data/fraction_IPc_lost.nc")
 ncbpc <- open.nc("../data/derived_data/fraction_BPc_lost.nc")
 ncbio <- open.nc("../data/derived_data/fraction_biomass_lost.nc")
-nc    <- create.nc("../product/fishing_impact_2009_bfiat.nc")
 
-ipc <- var.get.nc(ncipc, "fraction_IPc_lost")
-bpc <- var.get.nc(ncbpc, "fraction_BPc_lost")
-bio <- var.get.nc(ncbio, "fraction_biomass_lost")
-lon <- var.get.nc(ncipc, "longitude")
-lat <- var.get.nc(ncipc, "latitude")
+lon   <- var.get.nc(ncipc, "longitude")
+lat   <- var.get.nc(ncipc, "latitude")
+ipc   <- var.get.nc(ncipc, "fraction_IPc_lost")
+bpc   <- var.get.nc(ncbpc, "fraction_BPc_lost")
+bio   <- var.get.nc(ncbio, "fraction_biomass_lost")
+```
+
+# The EMODnet netCDF file
+
+The fishing impact will be written to one netCDF file that can be read with the EMODNET viewer. (how this can be done is nicely explained in https://emodnet.github.io/EMODnet-Biology-products-erddap-demo/ )
+
+The new netCDF file is created first.
+
+```{r}
+nc    <- create.nc("../product/fishing_impact_2009_bfiat.nc")
 ```
 
 # Defining the dimensions
+
+The fishing impact maps are defined in longitude, latitude coordinates. They apply to the year 2009. 
+We define three dimensions (lon, lat, time), along with their attributes (units, standard_name and long_name) and put them in the newly created netCDF file:
 
 ```{r}
 # ----------------
@@ -66,9 +69,6 @@ att.put.nc(nc, variable = "lon",
 
 var.put.nc(nc, variable = "lon", 
                data     = lon) 
-
-# Check
-#var.get.nc(nc, variable = "lon")
 
 # ----------------
 # latitude
@@ -102,14 +102,12 @@ att.put.nc(nc, variable = "lat",
 var.put.nc(nc, variable = "lat", 
                data     = lat) 
 
-# Check
-#var.get.nc(nc, variable = "lat")
-
 # ----------------
 # time
 # ----------------
 # Define time dimension
-dim.def.nc(nc, dimname = "time", dimlength = 1) 
+dim.def.nc(nc, dimname   = "time", 
+               dimlength = 1) 
 
 # Define time variable
 var.def.nc(nc, varname    = "time", 
@@ -125,7 +123,7 @@ att.put.nc(nc, variable = "time",
 att.put.nc(nc, variable = "time", 
                name     = "long_name", 
                type     = "NC_CHAR", 
-               value    = "Time")
+               value    = "year of the fishing impact assessment")
 
 att.put.nc(nc, variable = "time", 
                name     = "units", 
@@ -148,7 +146,17 @@ var.put.nc(nc, variable = "time",
 
 # variables
 
+Three variables will be added to the netCDF file (see [BFIAT analysis tutorial](02_BFIAT_analysis.qmd) as to how this was calculated):
+
+* the fractional loss of biomass due to trawling, *fraction_biomass_lost*; this quantity is estimated as  *1 - biomass/K_biomass*, where *biomass* is the observed biomass (for 2009), and K_biomass is the carrying capacity, i.e. the biomass that would be attained in the absence of fishing
+
+* the fractional loss of bioirrigation potential due to trawling (*fraction_IPc_lost = 1 - IPc/K_IPc*). 
+
+* the fractional loss of bioirrigation potential due to trawling (*fraction_IPc_lost = 1 - IPc/K_IPc*). 
+
 ## fraction biomass lost due to bottom trawling
+
+The variable is defined, attributes are added and then the value put in the netCDF file.
 
 ```{r}
 var.def.nc(nc, varname   = "fraction_biomass_lost", 
@@ -198,7 +206,7 @@ var.def.nc(nc, varname   = "fraction_BPc_lost",
 att.put.nc(nc, variable = "fraction_BPc_lost", 
                name     = "standard_name", 
                type     = "NC_CHAR", 
-               value    = "fraction_bioturbation_lost_to_fishing")
+               value    = "fraction_bioturbation_potential_lost_to_fishing")
 
 att.put.nc(nc, variable = "fraction_BPc_lost", 
                name     = "long_name", 
@@ -230,7 +238,6 @@ var.put.nc(nc, variable = "fraction_BPc_lost",
 ```
 
 ## fraction bioirrigation potential lost due to bottom trawling
-
 
 ```{r}
 var.def.nc(nc, varname   = "fraction_IPc_lost", 
@@ -273,54 +280,115 @@ var.put.nc(nc, variable = "fraction_IPc_lost",
 
 ## Non-dimensional crs variable
 
+Defining the coordinate system requires a lot of input, which is explained in (https://emodnet.github.io/EMODnet-Biology-products-erddap-demo/):
+
 ```{r}
 # Define non-dimensional crs variable 
-var.def.nc(nc, varname = "crs", vartype = "NC_CHAR", dimensions = NA)
+var.def.nc(nc, varname    = "crs", 
+               vartype    = "NC_CHAR", 
+               dimensions = NA)
 
 # Add attributes
 att.put.nc(nc, variable = "crs", 
-               name     = "long_name", type = "NC_CHAR", 
+               name     = "long_name", 
+               type     = "NC_CHAR", 
                value    = "Coordinate Reference System")
-att.put.nc(nc, variable = "crs", name = "geographic_crs_name", type = "NC_CHAR", value = "WGS 84")
-att.put.nc(nc, variable = "crs", name = "grid_mapping_name", type = "NC_CHAR", value = "latitude_longitude")
-att.put.nc(nc, variable = "crs", name = "reference_ellipsoid_name", type = "NC_CHAR", value = "WGS 84")
-att.put.nc(nc, variable = "crs", name = "horizontal_datum_name", type = "NC_CHAR", value = "WGS 84")
-att.put.nc(nc, variable = "crs", name = "prime_meridian_name", type = "NC_CHAR", value = "Greenwich")
-att.put.nc(nc, variable = "crs", name = "longitude_of_prime_meridian", type = "NC_DOUBLE", value = 0.)
-att.put.nc(nc, variable = "crs", name = "semi_major_axis", type = "NC_DOUBLE", value = 6378137.)
-att.put.nc(nc, variable = "crs", name = "semi_minor_axis", type = "NC_DOUBLE", value = 6356752.314245179)
+
+att.put.nc(nc, variable = "crs", 
+               name     = "geographic_crs_name", 
+               type     = "NC_CHAR", 
+               value    = "WGS 84")
+
+att.put.nc(nc, variable = "crs", 
+               name     = "grid_mapping_name", 
+               type     = "NC_CHAR", 
+               value    = "latitude_longitude")
+
+att.put.nc(nc, variable = "crs", 
+               name     = "reference_ellipsoid_name", 
+               type     = "NC_CHAR", 
+               value    = "WGS 84")
+
+att.put.nc(nc, variable = "crs", 
+               name     = "horizontal_datum_name", 
+               type     = "NC_CHAR", 
+               value    = "WGS 84")
+
+att.put.nc(nc, variable = "crs", 
+               name     = "prime_meridian_name", 
+               type     = "NC_CHAR", 
+               value    = "Greenwich")
+
+att.put.nc(nc, variable = "crs", 
+               name     = "longitude_of_prime_meridian", 
+               type     = "NC_DOUBLE", 
+               value    = 0.)
+
+att.put.nc(nc, variable = "crs", 
+               name     = "semi_major_axis", 
+               type     = "NC_DOUBLE", 
+               value    = 6378137.)
+
+att.put.nc(nc, variable = "crs", 
+               name     = "semi_minor_axis", 
+               type     = "NC_DOUBLE", 
+               value    = 6356752.314245179)
+
 att.put.nc(nc, variable = "crs", 
                name     = "inverse_flattening", 
-               type = "NC_DOUBLE", value = 298.257223563)
+               type     = "NC_DOUBLE", 
+               value    = 298.257223563)
+
 att.put.nc(nc, variable = "crs", 
                name     = "spatial_ref", type = "NC_CHAR", 
                value    = 'GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]')
 
 att.put.nc(nc, variable = "crs", 
-               name     = "GeoTransform", type = "NC_CHAR", 
+               name     = "GeoTransform", 
+               type     = "NC_CHAR", 
                value    = '-180 0.08333333333333333 0 90 0 -0.08333333333333333 ')
 ```
 
-# attributes
+# Global attributes
 
 
 ```{r}
 attributes <- list(
-  title = "Trawling impact on macrofauna in the Dutch part of the Northsea, for 2009",
-  summary = "This estimates the impact of trawling on macrofaunal communities in the Dutch part of the North sea, in terms of total biomass, bioturbation potential and bioirrigation potential. Impact on biomass is represented as one minus the ratio of biomass observed in 2009 over the carrying capacity: (1 - B/K), where B is the observed biomass from 2009 and K the estimated biomass in the absence of fishing. The Dutch monitoring data (MWTL) for 2009 were extracted from EMODnet biology; fishing intensity was extracted from ICES. Data creation used the R-packages Btrait and Bfiat; the procedure is described in Beauchard and Soetaert (2026).",                       
-  source = "Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282",
-  license = "CC-BY",
-  id = "",
-  history = "https://github.com/EMODnet/Bfiat_application_MWTL_2009",
-  source = "https://github.com/EMODnet/Bfiat_application_MWTL_2009",
+  title        = "Trawling impact on sedimentary macrofauna in the Dutch part of the Northsea, for 2009",
+  summary      = "This dataset contains estimates of the impact of trawling on macrofaunal communities in the Dutch part of the North sea for 2009, in terms of total biomass, bioturbation potential and bioirrigation potential. Impact on biomass is represented as one minus the ratio of biomass observed in 2009 over the carrying capacity: (1 - B/K), where B is the observed biomass from 2009 and K the estimated biomass in the absence of fishing (the carrying capacity). The Dutch monitoring data (MWTL) for 2009 were extracted from EMODnet biology; fishing intensity was extracted from ICES. Data creation used the R-packages Btrait and Bfiat; the procedure to assess fishing impact is described in Beauchard and Soetaert (2026).",                       
+  source     = "Bfiat model version 1.0.2, as described in Beauchard and Soetaert, 2026",
+  references = "Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282",
+  license        = "CC-BY",
+  id             = "",
+  Conventions      = "CF-1.12",
+  naming_authority = "https://emodnet.ec.europa.eu/en/biology",
+  comment = "Uses R-packages Bfiat and Btrait",
+  acknowledgment = "Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase V",
+  history        = "https://github.com/EMODnet/Bfiat_application_MWTL_2009",
+  source         = "https://github.com/EMODnet/Bfiat_application_MWTL_2009",
 
-  keywords = c("fishing", "impact", "macrobenthos"),
-  date_created = as.character(Sys.Date()),
-  creator_name = "Karline soetaert",
-  creator_email = "karline.soetaert@nioz.nl",
-  creator_url = "www.nioz.nl",
-  institution = "Netherlands Institute for Sea Research (NIOZ)",
-  project = "EMODnet-Biology",
+  keywords       = c("fishing", "impact", "macrobenthos"),
+  
+  # geospatial_vertical_units   = "",    
+  # date_modified = "",               
+  date_issued = as.character(Sys.Date()),                    
+  # date_metadata_modified   = "",       
+  # product_version = "",            
+  # keywords_vocabulary = "",          
+  # platform  = "",              
+  # platform_vocabulary = "",          
+  # instrument = "",          
+  # instrument_vocabulary  = "",        
+  # featureType = "Point",                  
+  # metadata_link = "",                  
+  # references = "",
+  date_created   = "2026-08-20",
+  date_modified  = as.character(Sys.Date()),
+  creator_name   = "Karline soetaert",
+  creator_email  = "karline.soetaert@nioz.nl",
+  creator_url    = "www.nioz.nl",
+  institution    = "Netherlands Institute for Sea Research (NIOZ)",
+  project        = "EMODnet-Biology",
   publisher_name = "EMODnet-Biology",                 
   publisher_email = "bio@emodnet.eu",                
   publisher_url = "https://emodnet.ec.europa.eu/en/biology",  
@@ -332,18 +400,18 @@ attributes <- list(
   geospatial_lat_max = max(lat),
   geospatial_lon_min = min(lon),
   geospatial_lon_max = max(lon),
-  time_coverage_start = "2009",            
-  time_coverage_end = "2009",              
-  time_coverage_duration = 1,         
-  time_coverage_resolution = "year",   
-  sea_name = "North Sea",                       
-  creator_institution = "Netherlands Institute for Sea Research (NIOZ)",           
   geospatial_lat_units = "degrees_north",           
   geospatial_lon_units = "degrees_east",           
-  comment = "Uses R-packages Bfiat and Btrait",
-  license = "CC-BY", 
-  citation = "Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282",
-  acknowledgement = "European Marine Observation Data Network (EMODnet) Biology project CINEA/EMFAF/2022/3.5.2/SI2.895681, funded by the European Union under Regulation (EU) No 508/2014 of the European Parliament and of the Council of 15 May 2014 on the European Maritime and Fisheries Fund"
+  time_coverage_start      = "2009",            
+  time_coverage_end        = "2009",              
+  time_coverage_duration   = 1,         
+  time_coverage_resolution = "year",   
+  sea_name            = "North Sea",                       
+  
+  creator_institution = "Netherlands Institute for Sea Research (NIOZ)",           
+
+  citation = "Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282"
+
 )
 
 add_global_attributes <- function(nc, attributes){
