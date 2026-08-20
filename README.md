@@ -22,7 +22,6 @@ This will put the output in the correct directories.
 
 ## Directory structure
 
-
 ```
 {{Bfiat_application_MWTL_2009}}/
 ├── analysis (empty)
