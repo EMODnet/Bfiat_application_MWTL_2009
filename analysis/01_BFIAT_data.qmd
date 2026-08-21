@@ -1,6 +1,5 @@
 ---
-title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
-subtitle: "part 1 - preparing data sets"
+title: "part 1 - preparing data sets"
 abstract: "Benthic fishing impact assessment using the BFIAT approach, requires (1) benthic taxon biomass or density data, (2) the taxon's average age at maturity, and sediment living depth, as well as (3) fishing intensity in terms of the swept area ratio and mean gear penetration depth. Here it is shown how to create such a dataset by combining species biomass data with trait databases and taxonomic trees. The data used are the Dutch Northsea macrofauna monitoring data from the year 2009 (the MWTL data), combined with a databases with macrofaunal traits, and fisheries data from ICES. The final data set is a large data.frame, that contains, for each sampling station, the species biomass and density, their age at maturity, and the occurrence in several sediment depth classes. For each station, also the swept area ratio and mean gear penetration depth is in the data.frame. This data forms the input for the BFIAT methodology. How to apply the Bfiat model is explained in [next tutorial](02_BFIAT_analysis.qmd)" 
 ---
 
@@ -72,7 +71,7 @@ head(Taxonomy, n = 3)
 
 The recovery rate of individual taxa after fishing, can be estimated from the inverse of the age at maturity (Beauchard and Soetaert, 2026). 
 
-The age at maturity trait is part of the nioz trait database, *Traits_nioz*, which is included in the *Btrait* package.
+The age at maturity trait is part of the nioz trait database, *Traits_nioz*, which is included in the *Btrait* package. These traits were described in Beauchard et al. (2021, 2023).
 
 This dataset records many traits, and the data are stored in wide format: there is one row for each taxon, and the trait modalities make up the columns.
 
@@ -322,29 +321,6 @@ How this is done is explained in the [next tutorial](02_BFIAT_analysis.qmd).
 # this assumes that the working directory is where the qmd file is located
 save(file = "../data/derived_data/MWTL_bfiat.rda",      MWTL_bfiat)
 ```
-
-# References
-
-Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282
-
-Chamberlain S, Vanhoorne. B (2023). *worrms: World Register of Marine Species (WoRMS) Client*.
-doi:10.32614/CRAN.package.worrms <https://doi.org/10.32614/CRAN.package.worrms>, R package version 0.4.3, <https://CRAN.R-project.org/package=worrms>.
-
-L. Leewis, E.C. Verduin, R. Stolk ; Eurofins AquaSense Macrozoobenthosonderzoek in de Rijkswateren met boxcorer, jaarrapportage MWTL 2015 : waterlichaam: Noordzee Publicatiedatum: 31-03-201775 p.
-Projectnummer Eurofins AquaSense: J00002105.
-Revisie 2, In opdracht van Ministerie van Infrastructuur en Milieu, Rijkswaterstaat Centrale Informatievoorziening (RWS, CIV)
-
-Soetaert, Karline and Olivier Beauchard (2023).
-R-package Btrait: Working with Biological density, taxonomy, and trait composition data.
-Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase IV. <https://github.com/EMODnet/Btrait>
-
-Soetaert, Karline and Olivier Beauchard (2024). R-package Bfiat: Tools for estimating the
-  impact of bottom disturbance on sediment ecosystems. Data product created under the
-  European Marine Observation Data Network (EMODnet) Biology Phase V, under the NECCTON
-  project (New Copernicus Capability for Trophic Ocean Networks), and under the OceanICU
-  (understanding Ocean Carbon) project.
-
-ICES Technical Service, Greater North Sea and Celtic Seas Ecoregions, 29 August 2018 sr.2018.14 Version 2: 22 January 2019 https://doi.org/10.17895/ices.pub.4508 OSPAR request on the production of spatial data layers of fishing intensity/pressure.
 
 # Appendix: visualisation of input data
 

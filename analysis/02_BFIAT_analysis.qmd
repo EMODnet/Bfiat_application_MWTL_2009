@@ -1,6 +1,5 @@
 ---
-title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
-subtitle: "part 2 - calculating fishing impact"
+title: "part 2 - calculating fishing impact"
 abstract: "Assessment of benthic fishing impact requires a data set that contains, alongside benthic taxon biomass and density, the taxon's average age at maturity, and its sediment living depth categorized into trait modalities, together with the fishing pressure in terms of the total swept area ratio and the gear penetration depth. Data from 2009 from the Dutch monitoring of the Northsea were extracted in the [previous tutorial](01_BFIAT_data.qmd). Here we show how these data are used to estimate fishing impact."    
 ---
 
@@ -198,7 +197,7 @@ The functions *get_Db_index* and *get_irr_index* from the *Btrait* package (Soet
 
 They require specific *trait* information, and the individual *weight* of the species.
 
-Trait information for these indices has been compiled in databases *Traits_Db* and *Traits_irr*, also available from the Btrait package.
+Trait information for these indices has been compiled in databases *Traits_Db* and *Traits_irr*, also available from the Btrait package. These traits were described in Querios et al. (2013) and Wrede et al. (2018) reespectively.
 
 While extracting the traits for the taxa, the taxonomic tree (*Taxonomy*) is passed to allow retrieving traits for undocumented species based on their taxonomic relationships.
 
@@ -273,31 +272,6 @@ save(file = "../data/derived_data/station_bfiat.rda", station_bfiat)
 ```
 
 In the [next tutorial](03_BFIAT_maps.qmd), we will use simple kriging to create full coverage maps from these station-specific data.
-
-# References
-
-Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282
-
-
-Chamberlain S, Vanhoorne.B (2023).
-*worrms: World Register of Marine Species (WoRMS) Client*.
-doi:10.32614/CRAN.package.worrms <https://doi.org/10.32614/CRAN.package.worrms>, R package version 0.4.3, <https://CRAN.R-project.org/package=worrms>.
-
-L. Leewis, E.C. Verduin, R. Stolk ; Eurofins AquaSense Macrozoobenthosonderzoek in de Rijkswateren met boxcorer, jaarrapportage MWTL 2015 : waterlichaam: Noordzee Publicatiedatum: 31-03-201775 p.
-Projectnummer Eurofins AquaSense: J00002105.
-Revisie 2, In opdracht van Ministerie van Infrastructuur en Milieu, Rijkswaterstaat Centrale Informatievoorziening (RWS, CIV)
-
-Soetaert, Karline and Olivier Beauchard (2023).
-R-package Btrait: Working with Biological density, taxonomy, and trait composition data.
-Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase IV. <https://github.com/EMODnet/Btrait>
-
-Soetaert, Karline and Olivier Beauchard (2024). R-package Bfiat: Tools for estimating the
-  impact of bottom disturbance on sediment ecosystems. Data product created under the
-  European Marine Observation Data Network (EMODnet) Biology Phase V, under the NECCTON
-  project (New Copernicus Capability for Trophic Ocean Networks), and under the OceanICU
-  (understanding Ocean Carbon) project.
-  
-ICES Technical Service, Greater North Sea and Celtic Seas Ecoregions, 29 August 2018 sr.2018.14 Version 2: 22 January 2019 https://doi.org/10.17895/ices.pub.4508 OSPAR request on the production of spatial data layers of fishing intensity/pressure.
 
 # Appendix: visualisation of modeled data
 

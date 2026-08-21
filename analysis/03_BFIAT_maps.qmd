@@ -1,6 +1,5 @@
 ---
-title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
-subtitle: "part 3 - gridding fishing impact"
+title: "part 3 - gridding fishing impact"
 abstract: "In [previous tutorial](02_BFIAT_analysis.qmd), the impact of fishing on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. For 100 stations, the reduction in terms of total biomass, bioturbation potential and bioirrrigation potential was estimated. Here we use these station-specific data to generate full coverage maps. We do this by simple kriging, and then masking the results using several shapefiles. After that, small netCDF files are generated. [Next tutorial](04_BFIAT_netCDF.qmd) will use these files to create a netCDF file that can be read by the EMODnet data viewer"    
 ---
 
@@ -272,17 +271,5 @@ writeRaster(x         = b[[i]],
 ```
 
 
-In next document, one NETCDF file will be generated.
+In the [Next tutorial](04_BFIAT_netCDF.qmd), one NETCDF file will be generated.
 
-# References
-
-Hijmans R (2025). _raster: Geographic Data Analysis and Modeling_. doi:10.32614/CRAN.package.raster
-  <https://doi.org/10.32614/CRAN.package.raster>, R package version 3.6-32,
-  <https://CRAN.R-project.org/package=raster>.
-  
-Pebesma, E.J., 2004. Multivariable geostatistics in S: the gstat package. Computers & Geosciences, 30:
-  683-691.
-
-Pebesma E, Bivand R (2005). “Classes and methods for spatial data in R.” _R News_, *5*(2), 9-13.
-  <https://CRAN.R-project.org/doc/Rnews/>.
-  

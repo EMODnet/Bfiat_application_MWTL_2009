@@ -1,10 +1,24 @@
 project:
-   type: website
+   type: book
    output-dir: ../docs
 
-website:
-   title: "Assessment of fisheries impact in the Dutch part of the Northsea, for 2009. The BFIAT approach"
-  
+book:
+   title: "Assessment of fisheries impact in the Dutch part of the Northsea, for 2009. The Bfiat approach"
+   reader-mode: true
+   page-footer:
+     left: |
+       written by Karline Soetaert.
+     right: |
+       for the EMODnet biology project
+   cover-image: logo_hex.png
+   chapters:
+     - index.qmd
+     - 01_BFIAT_data.qmd
+     - 02_BFIAT_analysis.qmd
+     - 03_BFIAT_maps.qmd
+     - 04_BFIAT_netCDF.qmd
+     - references.qmd
+     
 author: "karline soetaert"
 toc: true
 toc-depth: 3
@@ -12,9 +26,15 @@ toc-expand: true
 
 code-fold: show
 
-format: 
+format:
   html:
-    self-contained: true
+    theme:
+      - cosmo
+      - quarto-tdg.scss
+    author-meta: "Karline Soetaert"
+    callout-appearance: simple
+    highlight-style: a11y
+
 execute:
   echo: true
   warning: false

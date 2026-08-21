@@ -1,0 +1,25 @@
+---
+title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The Bfiat approach"
+---
+
+# Introduction
+
+Demersal fisheries are a major contributor to global food supply, but at the same time significantly affect marine ecosystem functioning. Physical contact of fishing gear with the seabed induces many changes to the sediment, including a direct mortality of benthic organisms (Sciberras et al. 2018). Understanding the impact of bottom trawling gear on benthic life is a necessary step towards a correct assessment of fisheries impact and eventually fisheries management.
+
+During previous phases of EMODnet biology, two R packages were created to aid fisheries management decisions. The Btrait and Bfiat R-packages (Soetaert and Beauchard, 2023, 2024) provide a deterministic modelling framework that describes depletion of benthic species density or biomass during a trawling disturbance, and its subsequent recovery inbetween fishing events. The average biomass or level of ecosystem functioning under trawling disturbance, estimated as a fraction of its pre-disturbance state then provides a quantitative expression of the trawling impact.
+
+Here the Bfiat methodology is applied to benthic data from EMODnet biology. The data are from the Dutch part of the North sea, for the year 2009. Using the Bfiat model, we quantify how bottom fishing interacts with species life-history traits to shape benthic state in terms of reduction in benthic biomass and the potential of the benthic fauna to mix and bio-irrigate the sediment (the so-called bioturbation and bio-irrigation potential of sediments). The two latter traits are important as they affect sediment geochemistry and global biogeochemical cycles.
+
+# The BFIAT approach
+
+In the BFIAT approach, the biomass evolution of benthic species in an area that is impacted by fishing is predicted according to a logistic population growth model. This model combines observed benthic species biomasses or densities with trawling parameters, and organism functional traits (Beauchard and Soetaert, in press). The methodology can also be used to assess impacts on functional traits, (Sciberras et al., subm.).
+
+The EMODnet data used are the monitoring data from the Dutch part of the Northsea for the year 2009. These data comprise density and biomass for 197 benthic taxa (mostly on species level), at 100 stations (located in between 2.68 - 6.6 ^oN and 51.62 - 55.47 ^oE). For the model, these observed data represent the current state of the sediment, i.e. the situation under fishing pressure. These data are available from the Btrait package
+
+For each taxon, the extent to which their living space in the sediment overlaps with the penetration of the fishing gear determines the mortality induced by fishing, while their intrinsic rate of increase determines how fast they recover after fishing. These parameters can be deduced from the species living depth and the species age at maturity respectively. These two traits were derived from a trait database, described in Beauchard et al., 2023, and are also available from the Btrait package.
+
+Fishing pressure is represented in terms of the frequency of fishing and the mean depth of the gear. To this end, we used annual swept area ratios (SAR) for different fishing metiers for 2009, as obtained from the ICES technical service. These data are also present in the Btrait package.
+
+Based on the observed taxon biomass, the species trait information and fisheries intensity, the model is then used to estimate the taxon biomass in the absence of fisheries (also called the carrying capacity, or pre-disturbance biomass of the taxon in a particular site).
+
+The ratio of observed biomass over pre-disturbance biomass provides an estimate of the relative benthic state (RBS), where 1 is an unimpacted state. The fisheries impact can be estimated as 1- RBS, i.e. the degree to which biomass (or some ecosystem function) has been depleted due to fishing.

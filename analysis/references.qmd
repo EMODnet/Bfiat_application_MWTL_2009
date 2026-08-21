@@ -1,0 +1,35 @@
+---
+title: "References"
+---
+
+Beauchard, O, Brind'Amour, A, Schratzberger, M, Laffargue, P, Hintzen, NT, Somerfield, PJ and Piet, G, 2021. A generic approach to develop a trait-based indicator of trawling-induced disturbance. Mar Ecol Prog Ser 675:35-52. https://doi.org/10.3354/meps13840
+
+Beauchard, O, Thompson, MSA Ellingsen, KE, Piet, G, Laffargue, P and K. Soetaert, 2023. Assessing sea floor functional diversity and vulnerability. Marine Ecology Progress Serie v708, p21-43, The CEFAS trait dataset:
+
+Beauchard, O, and Soetaert, K, 2026. Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282
+
+Chamberlain S, and Vanhoorne, B, 2023. *worrms: World Register of Marine Species (WoRMS) Client*.
+doi:10.32614/CRAN.package.worrms <https://doi.org/10.32614/CRAN.package.worrms>, R package version 0.4.3, <https://CRAN.R-project.org/package=worrms>.
+
+ICES Technical Service, 2019. Greater North Sea and Celtic Seas Ecoregions, 29 August 2018 sr.2018.14 Version 2: 22 January 2019 https://doi.org/10.17895/ices.pub.4508 OSPAR request on the production of spatial data layers of fishing intensity/pressure.
+
+Hijmans, R (2025). _raster: Geographic Data Analysis and Modeling_. doi:10.32614/CRAN.package.raster <https://doi.org/10.32614/CRAN.package.raster>, R package version 3.6-32, <https://CRAN.R-project.org/package=raster>.
+  
+Leewis, L, Verduin, EC, Stolk, R, 2015. Eurofins AquaSense Macrozoobenthosonderzoek in de Rijkswateren met boxcorer, jaarrapportage MWTL 2015 : waterlichaam: Noordzee Publicatiedatum: 31-03-2017, 75 p. Projectnummer Eurofins AquaSense: J00002105.
+Revisie 2, In opdracht van Ministerie van Infrastructuur en Milieu, Rijkswaterstaat Centrale Informatievoorziening (RWS, CIV)
+
+Michna, P and Woods M (2026). _RNetCDF: Interface to 'NetCDF' Datasets_.   doi:10.32614/CRAN.package.RNetCDF <https://doi.org/10.32614/CRAN.package.RNetCDF>, R package version 2.11-2, <https://CRAN.R-project.org/package=RNetCDF>.
+
+Pebesma, EJ, 2004. Multivariable geostatistics in S: the gstat package. Computers & Geosciences, 30:  683-691.
+
+Pebesma, E and Bivand R, (2005). “Classes and methods for spatial data in R.” _R News_, *5*(2), 9-13. <https://CRAN.R-project.org/doc/Rnews/>.
+  
+Queiros, AM, Birchenough, SNR, Bremner, J, Godbold, JA, Parker, RE, Romero-Ramirez, A, Reiss, H, Solan, M, Somerfield, PJ, Van Colen, C, Van Hoey, G, Widdicombe, S, 2013. A bioturbation classification of European marine infaunal invertebrates. Ecology and Evolution 3 (11), 3958-3985
+
+Soetaert, K and O Beauchard, 2023. R-package Btrait: Working with Biological density, taxonomy, and trait composition data. Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase IV. <https://github.com/EMODnet/Btrait>
+
+Soetaert, K and O Beauchard, 2024. R-package Bfiat: Tools for estimating the impact of bottom disturbance on sediment ecosystems. Data product created under the European Marine Observation Data Network (EMODnet) Biology Phase V, under the NECCTON project (New Copernicus Capability for Trophic Ocean Networks), and under the OceanICU (understanding Ocean Carbon) project.
+
+Wrede, A, Beermann, J, Dannheim, J, Gutow, L, Brey, T, 2018. Organism functional traits and ecosystem supporting services - A novel approach to predict bioirrigation. Ecological indicators, 91, 737-743.
+
+

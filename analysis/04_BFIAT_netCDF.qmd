@@ -1,6 +1,5 @@
 ---
-title: "Assessment of fisheries impact in the Dutch part of the Northsea, 2009. The BFIAT approach"
-subtitle: "part 4 - creating the EMDOnet NETCFD file"
+title: "part 4 - creating the EMDOnet NETCFD file"
 abstract: "Fishing impact on macrofaunal biomass was assessed based on monitoring data of the Dutch part of the Northsea, from 2009. In  [previous tutorial](02_BFIAT_analysis.qmd) we generated interpolated data for the dutch economic zone. These data were exported as small netCDF files. Here we generate one fully documented netCDF file, that can be used as input to the EMODnet viewer"    
 ---
 
@@ -123,10 +122,10 @@ var.def.nc(nc, varname   = "fraction_biomass_lost",
                vartype   = "NC_DOUBLE", 
                dimension = c("lon", "lat"))
 
-att.put.nc(nc, variable = "fraction_biomass_lost", 
-               name     = "standard_name", 
-               type     = "NC_CHAR", 
-               value    = "fraction_biomass_lost_to_fishing")
+#att.put.nc(nc, variable = "fraction_biomass_lost", 
+#               name     = "standard_name", 
+#               type     = "NC_CHAR", 
+#               value    = "fraction_biomass_lost_to_fishing")
 
 att.put.nc(nc, variable = "fraction_biomass_lost", 
                name     = "long_name", 
@@ -136,7 +135,7 @@ att.put.nc(nc, variable = "fraction_biomass_lost",
 att.put.nc(nc, variable = "fraction_biomass_lost", 
                name     = "units", 
                type     = "NC_CHAR", 
-               value    = "-")
+               value    = "1")
 
 att.put.nc(nc, variable = "fraction_biomass_lost", 
                name     = "formula", 
@@ -163,10 +162,10 @@ var.def.nc(nc, varname   = "fraction_BPc_lost",
                vartype   = "NC_DOUBLE", 
                dimension = c("lon", "lat"))
 
-att.put.nc(nc, variable = "fraction_BPc_lost", 
-               name     = "standard_name", 
-               type     = "NC_CHAR", 
-               value    = "fraction_bioturbation_potential_lost_to_fishing")
+#att.put.nc(nc, variable = "fraction_BPc_lost", 
+#               name     = "standard_name", 
+#               type     = "NC_CHAR", 
+#               value    = "fraction_bioturbation_potential_lost_to_fishing")
 
 att.put.nc(nc, variable = "fraction_BPc_lost", 
                name     = "long_name", 
@@ -176,7 +175,7 @@ att.put.nc(nc, variable = "fraction_BPc_lost",
 att.put.nc(nc, variable = "fraction_BPc_lost", 
                name     = "units", 
                type     = "NC_CHAR", 
-               value    = "-")
+               value    = "1")
 
 
 att.put.nc(nc, variable = "fraction_BPc_lost", 
@@ -204,10 +203,10 @@ var.def.nc(nc, varname   = "fraction_IPc_lost",
                vartype   = "NC_DOUBLE", 
                dimension = c("lon", "lat"))
 
-att.put.nc(nc, variable = "fraction_IPc_lost", 
-               name     = "standard_name", 
-               type     = "NC_CHAR", 
-               value    = "fraction_bioirrigation_lost_to_fishing")
+#att.put.nc(nc, variable = "fraction_IPc_lost", 
+#               name     = "standard_name", 
+#               type     = "NC_CHAR", 
+#               value    = "fraction_bioirrigation_lost_to_fishing")
 
 att.put.nc(nc, variable = "fraction_IPc_lost", 
                name     = "long_name", 
@@ -217,7 +216,7 @@ att.put.nc(nc, variable = "fraction_IPc_lost",
 att.put.nc(nc, variable = "fraction_IPc_lost", 
                name     = "units", 
                type     = "NC_CHAR", 
-               value    = "-")
+               value    = "1")
 
 
 att.put.nc(nc, variable = "fraction_IPc_lost", 
@@ -370,7 +369,7 @@ attributes <- list(
   
   creator_institution = "Netherlands Institute for Sea Research (NIOZ)",           
 
-  citation = "Beauchard, Olivier and Soetaert, Karline, 2026 Bottom fishing assessment tool: An R package to model the effects of bottom trawling on the marine benthos. Ecological Applications(36) 5, e70282. URL https://doi.org/10.1002/eap.70282"
+  citation = ""
 
 )
 
@@ -413,9 +412,3 @@ print.nc(nc)
 close.nc(nc)
 ```
 
-# References
-
- Michna P, Woods M (2026). _RNetCDF: Interface to 'NetCDF' Datasets_.
-  doi:10.32614/CRAN.package.RNetCDF <https://doi.org/10.32614/CRAN.package.RNetCDF>, R
-  package version 2.11-2, <https://CRAN.R-project.org/package=RNetCDF>.
-  
